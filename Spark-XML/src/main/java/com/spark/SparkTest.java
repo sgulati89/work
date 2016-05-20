@@ -90,8 +90,7 @@ public class SparkTest {
 				new StructField("CALC_TYPE", DataTypes.StringType, true, Metadata.empty()),
 				new StructField("CD_INSTMT_TYPE", DataTypes.StringType, true, Metadata.empty()),
 				new StructField("CE_set",DataTypes.createStructType(ceSet),true,Metadata.empty()),
-				new StructField("CHANGE_DT", DataTypes.StringType, true, Metadata.empty()),
-				
+				new StructField("CHANGE_DT", DataTypes.StringType, true, Metadata.empty()),		
 				new StructField("COMPOUND_FLAG", DataTypes.StringType, true, Metadata.empty()),
 				new StructField("COUNTRY", DataTypes.StringType, true, Metadata.empty()),
 				new StructField("COUPON_FIX", DataTypes.StringType, true, Metadata.empty()),
@@ -151,15 +150,40 @@ public class SparkTest {
 		
 		
 		DataFrame asset = sqlContext.read().format("com.databricks.spark.xml").option("rowTag", "FhlmcModel_BND_CORP").schema(customSchema).
-			load("/home/impadmin/Documents/spark-sml/sample.xml");
+			load("/home/impadmin/sample.xml");
 
 		asset.registerTempTable("asset_table");
 		DataFrame assetTable=sqlContext.sql("SELECT UNITS from asset_table");
 		
-		assetTable.write().format("parquet").mode("overwrite").save("hdfs://localhost:8020/user/impadmin/spark");
-
+		assetTable.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark");
+		
+	DataFrame CUSIP2_setTable = sqlContext.sql("Select AMT_ISU , CUSIP2_set.CUSIP2_record.CODE ,CUSIP2_set.CUSIP2_record.IDENTIFIER from asset_table");
+	CUSIP2_setTable.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP2_setTable");
+	CUSIP2_setTable.show();
+	
+	
+	DataFrame CUSIP_ALIAS_set = sqlContext.sql("Select AMT_ISU , CUSIP_ALIAS_set.CUSIP_ALIAS_record.CODE ,CUSIP_ALIAS_set.CUSIP_ALIAS_record.IDENTIFIER, CUSIP_ALIAS_set.CUSIP_ALIAS_record.PURPOSE from asset_table");
+	CUSIP_ALIAS_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP_ALIAS_setTable");
+	CUSIP_ALIAS_set.show();
+	
+	
+	DataFrame ISSUE_EXCHANGES_set = sqlContext.sql("Select AMT_ISU , ISSUE_EXCHANGES_set.ISSUE_EXCHANGES_record.EXCHANGE from asset_table");
+	ISSUE_EXCHANGES_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/ISSUE_EXCHANGES_setTable");
+	ISSUE_EXCHANGES_set.show();
+ 
+	/*DataFrame RATING_set = sqlContext.sql("Select AMT_ISU , CUSIP2_set.CUSIP2_record.CODE ,CUSIP2_set.CUSIP2_record.IDENTIFIER from asset_table");
+	RATING_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP2_setTable");
+	RATING_set.show();
+	
+	DataFrame SECTOR_set = sqlContext.sql("Select AMT_ISU , CUSIP2_set.CUSIP2_record.CODE ,CUSIP2_set.CUSIP2_record.IDENTIFIER from asset_table");
+	SECTOR_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP2_setTable");
+	SECTOR_set.show();
+	
+	DataFrame UDF_set = sqlContext.sql("Select AMT_ISU , CUSIP2_set.CUSIP2_record.CODE ,CUSIP2_set.CUSIP2_record.IDENTIFIER from asset_table");
+	UDF_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP2_setTable");
+	UDF_set.show();
 		//assetTable.write().format("parquet").mode("overwrite").save("/home/impadmin/Documents/spark-sml/out");
-		assetTable.show();
+		assetTable.show();*/
 		
 		//assetTable.toJavaRDD().saveAsTextFile("hdfs://localhost:8020/user/impadmin/spark");
 
