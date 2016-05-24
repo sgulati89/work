@@ -21,6 +21,8 @@ public class SparkTest {
 		SparkConf conf = new SparkConf().setMaster("local").setAppName("appName");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
 		SQLContext sqlContext = new SQLContext(javaSparkContext);
+		//Hive context
+       // HiveContext hc = new HiveContext(ctx.sc());
 
 		List<StructField>  ceList =new ArrayList<>();
 		ceList.add(DataTypes.createStructField("CONDITIONAL", DataTypes.StringType, true));
@@ -157,17 +159,19 @@ public class SparkTest {
 		
 		assetTable.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark");
 		
-	DataFrame CUSIP2_setTable = sqlContext.sql("Select AMT_ISU , CUSIP2_set.CUSIP2_record.CODE ,CUSIP2_set.CUSIP2_record.IDENTIFIER from asset_table");
+	//DataFrame CUSIP2_setTable = sqlContext.sql("Select AMT_ISU , CUSIP2_set.CUSIP2_record.CODE ,CUSIP2_set.CUSIP2_record.IDENTIFIER from asset_table");
+		DataFrame CUSIP2_setTable = sqlContext.sql("Select AMT_ISU , CUSIP2_set.CUSIP2_record   from asset_table");	
+		
 	CUSIP2_setTable.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP2_setTable");
 	CUSIP2_setTable.show();
 	
 	
-	DataFrame CUSIP_ALIAS_set = sqlContext.sql("Select AMT_ISU , CUSIP_ALIAS_set.CUSIP_ALIAS_record.CODE ,CUSIP_ALIAS_set.CUSIP_ALIAS_record.IDENTIFIER, CUSIP_ALIAS_set.CUSIP_ALIAS_record.PURPOSE from asset_table");
-	CUSIP_ALIAS_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP_ALIAS_setTable");
-	CUSIP_ALIAS_set.show();
+	//DataFrame CUSIP_ALIAS_set = sqlContext.sql("Select AMT_ISU , explode(CUSIP_ALIAS_set.CUSIP_ALIAS_record.CODE) as ex_code ,explode(CUSIP_ALIAS_set.CUSIP_ALIAS_record.IDENTIFIER ) as ex_identifier, CUSIP_ALIAS_set.CUSIP_ALIAS_record.PURPOSE from asset_table");
+	//CUSIP_ALIAS_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/CUSIP_ALIAS_setTable");
+	//CUSIP_ALIAS_set.show();
 	
 	
-	DataFrame ISSUE_EXCHANGES_set = sqlContext.sql("Select AMT_ISU , ISSUE_EXCHANGES_set.ISSUE_EXCHANGES_record.EXCHANGE from asset_table");
+	DataFrame ISSUE_EXCHANGES_set = sqlContext.sql("Select AMT_ISU , explode(ISSUE_EXCHANGES_set.ISSUE_EXCHANGES_record.EXCHANGE) as exp_echg from asset_table");
 	ISSUE_EXCHANGES_set.write().format("parquet").mode("overwrite").save("hdfs://localhost:9000/user/impadmin/spark/ISSUE_EXCHANGES_setTable");
 	ISSUE_EXCHANGES_set.show();
  
