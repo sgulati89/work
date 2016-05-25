@@ -62,7 +62,7 @@ public class DataProcessor {
 			System.out.println("The file names are" +fil);
 		}*/
 		
-		//Schema structure
+		//Schema structure format
 		
 		System.out.println(docDF.schema().simpleString());
 		
