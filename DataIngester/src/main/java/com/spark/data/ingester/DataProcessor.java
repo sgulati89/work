@@ -30,7 +30,7 @@ public class DataProcessor {
 		String formatClass=null;
 		
 		System.setProperty("hadoop.home.dir", "C:\\Users\\sumit.kumar\\Docker\\winutil\\");
-		SparkConf conf = new SparkConf().setAppName("DataProcessor");
+		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
 		SQLContext sqlContext = new SQLContext(javaSparkContext);
 		DataFrame docDF = null;
@@ -56,13 +56,13 @@ public class DataProcessor {
 		
 
 		docDF.printSchema();
-		
-		String[] fileArr=docDF.inputFiles();
+		//TODO fetching file name dynamically is not working
+		/*String[] fileArr=docDF.inputFiles();
 		for(String fil:fileArr){
 			System.out.println("The file names are" +fil);
-		}
+		}*/
 		System.out.println(docDF.schema().simpleString());
-		docDF.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+fileArr[0]);
+		docDF.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+"fileName");
       
         
   //	asset.registerTempTable("asset_table");
