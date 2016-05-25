@@ -61,7 +61,12 @@ public class DataProcessor {
 		for(String fil:fileArr){
 			System.out.println("The file names are" +fil);
 		}*/
+		
+		//Schema structure
+		
 		System.out.println(docDF.schema().simpleString());
+		
+		
 		docDF.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+"fileName");
       
         
