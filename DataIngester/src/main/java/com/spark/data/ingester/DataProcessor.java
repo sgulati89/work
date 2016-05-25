@@ -1,14 +1,20 @@
 package com.spark.data.ingester;
 
+import javax.swing.text.html.parser.Entity;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 
+import com.spark.data.Assets.ASSETS;
+import com.spark.data.Assets.FhlmcModel_BND_CORP;
 import com.spark.data.util.Constants;
 
 public class DataProcessor {
@@ -68,7 +74,19 @@ public class DataProcessor {
 		
 		
 		docDF.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+"fileName");
-      
+         
+		 Dataset<FhlmcModel_BND_CORP> dataS=docDF.as(Encoders.bean(FhlmcModel_BND_CORP.class));
+		//checking
+		 dataS.show();
+		 
+		 dataS.select();
+		 
+		//dataS.select(DataFrame.col("ASSET"));
+		 
+		
+		 
+		 
+		//createDataset(docDF.t, Encoders.bean(ASSETS.class)) ;
         
   //	asset.registerTempTable("asset_table");
   //	sqlContext.cacheTable("asset_table");
