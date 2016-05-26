@@ -33,6 +33,13 @@ public class DataProcessor {
 		Row[] rowsInXml = null;
 		Row[] rowsProcessed = null;
 
+		outputPath = outputPath + "/" + partitionFormat;
+		errorPath = errorPath + "/" + partitionFormat;
+
+		System.out.println("Input Path is: " + hdfsInputPath);
+		System.out.println("Output Path is: " + outputPath);
+		System.out.println("Error Path is: " + errorPath);
+
 		// System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
@@ -138,9 +145,9 @@ public class DataProcessor {
 
 		if (rowsProcess.longValue() == rowsInXml[0].getLong(0)) {
 			// Save File
-			exp_col.write().format("parquet").mode("overwrite").save(outputPath + "/" + partitionFormat + "/" + "fileName");
+			exp_col.write().format("parquet").mode("overwrite").save(outputPath + "/" + "fileName");
 		} else {
-			exp_col.write().format("parquet").mode("overwrite").save(errorPath + "/" + partitionFormat + "/" + "fileName");
+			exp_col.write().format("parquet").mode("overwrite").save(errorPath + "/" + "fileName");
 			System.out.println("Saved in Error folder as number of Rows did not match!!!");
 			throw new Exception("Number of Rows did not match!!!");
 		}
