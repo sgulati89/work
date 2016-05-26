@@ -1,9 +1,10 @@
 package com.spark.data.ingester;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.HashMap;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
@@ -18,12 +19,9 @@ import com.spark.data.util.Constants;
 public class DataProcessor {
 
 	public static void main(String[] args) throws Exception {
-		// Disable extra log
-		// Logger.getLogger("org").setLevel(Level.ERROR);
-		// Logger.getLogger("akka").setLevel(Level.ERROR);
-
 		// Map variables
 		// TODO Not checking variables as the same is being done in script
+
 		String hdfsInputPath = args[0];
 		String fileFormat = args[1];
 		String fileDefination = args[2]; // TODO not using as of now
@@ -38,16 +36,11 @@ public class DataProcessor {
 		outputPath = outputPath + "/" + partitionFormat;
 		errorPath = errorPath + "/" + partitionFormat;
 
-		System.out.println("Input Path is: " + hdfsInputPath);
-		System.out.println("Output Path is: " + outputPath);
-		System.out.println("Error Path is: " + errorPath);
-		BufferedWriter bw = new BufferedWriter(new FileWriter("/home/hadoop/filepaths"));
-		bw.write("Input Path is: " + hdfsInputPath + "\n");
-		bw.write("Output Path is: " + outputPath + "\n");
-		bw.write("Error Path is: " + errorPath);
-		bw.flush();
-		bw.close();
-
+		Logger rootLogger = LogManager.getRootLogger();
+		rootLogger.setLevel(Level.INFO);
+		rootLogger.info("Input Path is: " + hdfsInputPath);
+		rootLogger.info("Output Path is: " + outputPath);
+		rootLogger.info("Error Path is: " + errorPath);
 		// System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
