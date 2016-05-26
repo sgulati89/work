@@ -1,14 +1,7 @@
 package com.spark.data.ingester;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import javax.swing.text.html.parser.Entity;
-
-import org.apache.commons.collections.map.HashedMap;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
@@ -16,25 +9,16 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.expressions.Window;
-import org.apache.spark.sql.expressions.WindowSpec;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.Metadata;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
-
-import scala.collection.Map;
 
 import com.spark.data.Assets.ASSETS;
-import com.spark.data.Assets.FhlmcModel_BND_CORP;
 import com.spark.data.util.Constants;
 
 public class DataProcessor {
 
 	public static void main(String[] args) throws Exception {
 		// Disable extra log
-		Logger.getLogger("org").setLevel(Level.ERROR);
-		Logger.getLogger("akka").setLevel(Level.ERROR);
+		// Logger.getLogger("org").setLevel(Level.ERROR);
+		// Logger.getLogger("akka").setLevel(Level.ERROR);
 
 		// Map variables
 		// TODO Not checking variables as the same is being done in script
@@ -49,7 +33,7 @@ public class DataProcessor {
 		Row[] rowsInXml = null;
 		Row[] rowsProcessed = null;
 
-		//System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
+		// System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
 		SQLContext sqlContext = new SQLContext(javaSparkContext);
@@ -59,27 +43,38 @@ public class DataProcessor {
 			HashMap<String, String> params = new HashMap<String, String>();
 			params.put("rowTag", "ASSETS");
 			// params.put("failFast", "true");
-			docDF = sqlContext.read().format(formatClass).options(params)
-					.load(hdfsInputPath);
-		} else if (fileFormat.trim().toLowerCase()
-				.equalsIgnoreCase(Constants.JSON)) {
+			docDF = sqlContext.read().format(formatClass).options(params).load(hdfsInputPath);
+		} else if (fileFormat.trim().toLowerCase().equalsIgnoreCase(Constants.JSON)) {
 			formatClass = "org.apache.spark.sql.json";
 			// asset = sqlContext.read().json(filePath);
 			docDF = sqlContext.read().format(formatClass).load(hdfsInputPath);
-		} else if (fileFormat.trim().toLowerCase()
-				.equalsIgnoreCase(Constants.CSV)) {
+		} else if (fileFormat.trim().toLowerCase().equalsIgnoreCase(Constants.CSV)) {
 			formatClass = "com.databricks.spark.csv";
-			docDF = sqlContext.read().format(formatClass)
-					.option("header", "true") // Use first line of all files as header
-					.option("inferSchema", "true") // Automatically infer data types
+			docDF = sqlContext.read().format(formatClass).option("header", "true") // Use
+																					// first
+																					// line
+																					// of
+																					// all
+																					// files
+																					// as
+																					// header
+					.option("inferSchema", "true") // Automatically infer data
+													// types
 					.load(hdfsInputPath);
-		} else if (fileFormat.trim().toLowerCase()
-				.equalsIgnoreCase(Constants.DELIMITED)) {
+		} else if (fileFormat.trim().toLowerCase().equalsIgnoreCase(Constants.DELIMITED)) {
 			formatClass = "com.databricks.spark.csv";
-			docDF = sqlContext.read().format(formatClass)
-					.option("header", "true") // Use first line of all files as header
-					.option("inferSchema", "true") // Automatically infer data types
-					.option("delimiter", "~") // TODO to be made configurable later
+			docDF = sqlContext.read().format(formatClass).option("header", "true") // Use
+																					// first
+																					// line
+																					// of
+																					// all
+																					// files
+																					// as
+																					// header
+					.option("inferSchema", "true") // Automatically infer data
+													// types
+					.option("delimiter", "~") // TODO to be made configurable
+												// later
 					.load(hdfsInputPath);
 		}
 
@@ -128,27 +123,24 @@ public class DataProcessor {
 		// );
 
 		rowsInXml = assets.select("@RECORDS").collect();
-		System.out.println("The count of rows in parent DF is :: "+ rowsInXml[0].getLong(0));
+		System.out.println("The count of rows in parent DF is :: " + rowsInXml[0].getLong(0));
 		System.out.println("The row count is :" + rowsInXml[0].getLong(0));
 
 		assets.show();
 
-		DataFrame fhlmcModel_EX = sqlContext
-				.sql("SELECT explode(ASSET.FhlmcModel_BND_CORP) as FhlmcModel_EX from ASSETS");
+		DataFrame fhlmcModel_EX = sqlContext.sql("SELECT explode(ASSET.FhlmcModel_BND_CORP) as FhlmcModel_EX from ASSETS");
 		fhlmcModel_EX.show();
 
 		DataFrame exp_col = fhlmcModel_EX.select("FhlmcModel_EX.*");
 		exp_col.show();
 		Long rowsProcess = exp_col.count();
-		System.out.println("The count of rows in dataset formatted DF is :: "+ rowsProcess.longValue());
+		System.out.println("The count of rows in dataset formatted DF is :: " + rowsProcess.longValue());
 
 		if (rowsProcess.longValue() == rowsInXml[0].getLong(0)) {
 			// Save File
-			exp_col.write().format("parquet").mode("overwrite")
-					.save(outputPath + partitionFormat + "fileName");
+			exp_col.write().format("parquet").mode("overwrite").save(outputPath + partitionFormat + "fileName");
 		} else {
-			exp_col.write().format("parquet").mode("overwrite")
-					.save(errorPath + partitionFormat + "fileName");
+			exp_col.write().format("parquet").mode("overwrite").save(errorPath + partitionFormat + "fileName");
 			System.out.println("Saved in Error folder as number of Rows did not match!!!");
 			throw new Exception("Number of Rows did not match!!!");
 		}
