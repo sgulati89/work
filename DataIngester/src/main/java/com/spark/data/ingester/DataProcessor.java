@@ -46,6 +46,7 @@ public class DataProcessor {
 		bw.write("Output Path is: " + outputPath + "\n");
 		bw.write("Error Path is: " + errorPath);
 		bw.flush();
+		bw.close();
 
 		// System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
