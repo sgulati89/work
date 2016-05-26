@@ -138,9 +138,9 @@ public class DataProcessor {
 
 		if (rowsProcess.longValue() == rowsInXml[0].getLong(0)) {
 			// Save File
-			exp_col.write().format("parquet").mode("overwrite").save(outputPath + partitionFormat + "fileName");
+			exp_col.write().format("parquet").mode("overwrite").save(outputPath + "/" + partitionFormat + "/" + "fileName");
 		} else {
-			exp_col.write().format("parquet").mode("overwrite").save(errorPath + partitionFormat + "fileName");
+			exp_col.write().format("parquet").mode("overwrite").save(errorPath + "/" + partitionFormat + "/" + "fileName");
 			System.out.println("Saved in Error folder as number of Rows did not match!!!");
 			throw new Exception("Number of Rows did not match!!!");
 		}
