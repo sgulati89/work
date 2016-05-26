@@ -26,12 +26,13 @@ fileFormat=${3:-"xml"}
 fileDefination=${4:-""}
 outputPath=${5:-""}
 partitionFormat=${6:-""}
+errorPath=${7:-""}
 
 #redirect all 
 1>&2 
 
 # check argument count
-if [ $# -ge 4 && $# -le 6 ]
+if [ $# -ge 4 && $# -le 7 ]
 then
   echo $USAGE
   exit
@@ -65,4 +66,5 @@ $hdfsInputPath \
 $fileFormat \
 $fileDefination \
 $outputPath \
-$partitionFormat
+$partitionFormat \
+$errorPath
