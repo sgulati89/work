@@ -32,7 +32,7 @@ import com.spark.data.util.Constants;
 public class DataProcessor {
 
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		//Disable extra log
 		Logger.getLogger("org").setLevel(Level.ERROR);
 	    Logger.getLogger("akka").setLevel(Level.ERROR);
@@ -46,9 +46,10 @@ public class DataProcessor {
 		String partitionFormat=args[4];
 		
 		String formatClass=null;
-		
+		Row[] rowsInXml=null;
+		Row[] rowsProcessed=null;
 				
-		System.setProperty("hadoop.home.dir", "C:\\Users\\sumit.kumar\\Docker\\winutil\\");
+		//System.setProperty("hadoop.home.dir", "C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
 		SQLContext sqlContext = new SQLContext(javaSparkContext);
@@ -85,7 +86,7 @@ public class DataProcessor {
 		}*/
 		
 		//Schema structure format
-		System.out.println("The count of rows in parent DF is :: "+docDF.count());
+		
 		System.out.println(docDF.schema().simpleString());
 		
 		
@@ -122,7 +123,8 @@ public class DataProcessor {
 		// DataFrame flatRec=docDF.select( "FhlmcModel_BND_CORP.PMT_LOCATION","FhlmcModel_BND_CORP.ISSUE_YIELD" );
 	// DataFrame flatRec=dataS.toDF().select(org.apache.spark.sql.functions.explode(docDF.col("FhlmcModel_BND_CORP")).as("FhlmcModel_FLAT") );
 		
-		 Row[] rowsInXml=assets.select("@RECORDS").collect();
+		 rowsInXml=assets.select("@RECORDS").collect();
+		 System.out.println("The count of rows in parent DF is :: "+rowsInXml[0].getLong(0));
 		 System.out.println("The row count is :"+rowsInXml[0].getLong(0));
 		 
 		 assets.show();		
@@ -130,11 +132,20 @@ public class DataProcessor {
 		 DataFrame fhlmcModel_EX=sqlContext.sql("SELECT explode(ASSET.FhlmcModel_BND_CORP) as FhlmcModel_EX from ASSETS");
 		 fhlmcModel_EX.show();
 		 
-		System.out.println("The count of rows in dataset formatted DF is :: "+fhlmcModel_EX.count());
+		
 		
 		DataFrame exp_col=fhlmcModel_EX.select("FhlmcModel_EX.*");
 		exp_col.show();
-		 
+		Long rowsProcess=exp_col.count();
+		System.out.println("The count of rows in dataset formatted DF is :: "+rowsProcess.longValue());
+		
+		if(rowsProcess.longValue()==rowsInXml[0].getLong(0)){
+			//Save File
+			exp_col.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+"fileName");
+		}else{
+			throw new Exception("Number of Rows did not match!!!");
+		}
+		
 		//createDataset(docDF.t, Encoders.bean(ASSETS.class)) ;
         
   //	asset.registerTempTable("asset_table");
@@ -149,8 +160,7 @@ public class DataProcessor {
    //  indvFlatRec.show();
     
     
-     //Save File
-		exp_col.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+"fileName");
+     
 
 	}
 
