@@ -1,5 +1,7 @@
 package com.spark.data.ingester;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.HashMap;
 
 import org.apache.spark.SparkConf;
@@ -39,6 +41,11 @@ public class DataProcessor {
 		System.out.println("Input Path is: " + hdfsInputPath);
 		System.out.println("Output Path is: " + outputPath);
 		System.out.println("Error Path is: " + errorPath);
+		BufferedWriter bw = new BufferedWriter(new FileWriter("/home/hadoop/filepaths"));
+		bw.write("Input Path is: " + hdfsInputPath + "\n");
+		bw.write("Output Path is: " + outputPath + "\n");
+		bw.write("Error Path is: " + errorPath);
+		bw.flush();
 
 		// System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
