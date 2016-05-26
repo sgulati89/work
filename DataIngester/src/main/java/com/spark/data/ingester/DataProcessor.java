@@ -1,7 +1,12 @@
 package com.spark.data.ingester;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import javax.swing.text.html.parser.Entity;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
@@ -9,9 +14,16 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+
+import scala.collection.Map;
 
 import com.spark.data.Assets.ASSETS;
 import com.spark.data.Assets.FhlmcModel_BND_CORP;
@@ -35,6 +47,7 @@ public class DataProcessor {
 		
 		String formatClass=null;
 		
+				
 		System.setProperty("hadoop.home.dir", "C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
@@ -42,7 +55,10 @@ public class DataProcessor {
 		DataFrame docDF = null;
 		if(fileFormat.trim().toLowerCase().equalsIgnoreCase(Constants.XML)){
 			formatClass="com.databricks.spark.xml";
-			docDF = sqlContext.read().format(formatClass).option("rowTag", "ASSET").load(hdfsInputPath);
+			HashMap<String, String> params = new HashMap<String, String>();
+			params.put("rowTag", "ASSETS");
+			//params.put("failFast", "true");
+			docDF = sqlContext.read().format(formatClass).options(params).load(hdfsInputPath);
 		}else if(fileFormat.trim().toLowerCase().equalsIgnoreCase(Constants.JSON)){
 			formatClass="org.apache.spark.sql.json";
 			//asset = sqlContext.read().json(filePath);
@@ -69,22 +85,55 @@ public class DataProcessor {
 		}*/
 		
 		//Schema structure format
-		
+		System.out.println("The count of rows in parent DF is :: "+docDF.count());
 		System.out.println(docDF.schema().simpleString());
 		
 		
-		docDF.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+"fileName");
+		
          
-		 Dataset<FhlmcModel_BND_CORP> dataS=docDF.as(Encoders.bean(FhlmcModel_BND_CORP.class));
+		 Dataset<ASSETS> dataS=docDF.as(Encoders.bean(ASSETS.class));
 		//checking
 		 dataS.show();
 		 
-		 dataS.select();
-		 
-		//dataS.select(DataFrame.col("ASSET"));
-		 
 		
 		 
+		 //TODO to check how to fetch data using dataset
+		// dataS.select();
+		 String query="FhlmcModel_BND_CORP.PMT_LOCATION,  FhlmcModel_BND_CORP.ISSUE_YIELD,  FhlmcModel_BND_CORP.CHANGE_DT,  private ISSUE_EXCHANGES_set ISSUE_EXCHANGES_set,  "
+		 		+ "FhlmcModel_BND_CORP.PMT_FREQ_TYPE,  FhlmcModel_BND_CORP.ISSUER_ID,  FhlmcModel_BND_CORP.ISSUE_DT,  FhlmcModel_BND_CORP.FLAG_CONVERT, "
+		 		+ " FhlmcModel_BND_CORP.SAL_INDUSTRY,  FhlmcModel_BND_CORP.FLAG_EOM,  FhlmcModel_BND_CORP.MIN_TRD_SIZE,  FhlmcModel_BND_CORP.MIN_LOT_SIZE,"
+		 		+ "  FhlmcModel_BND_CORP.COMPOUND_FLAG,  FhlmcModel_BND_CORP.PMT_CAL,  FhlmcModel_BND_CORP.SM_SEC_TYPE,  private SECTOR_set SECTOR_set, "
+		 		+ " FhlmcModel_BND_CORP.PUT_CALL,  FhlmcModel_BND_CORP.MODIFIED_BY,  FhlmcModel_BND_CORP.STRUCTURE,  FhlmcModel_BND_CORP.REVIEWED_BY, "
+		 		+ " FhlmcModel_BND_CORP.NTL_FLAG,  FhlmcModel_BND_CORP.FIRST_PAY_DT,  FhlmcModel_BND_CORP.UNITS,  FhlmcModel_BND_CORP.WI_FLAG, "
+		 		+ " FhlmcModel_BND_CORP.END_ADJ_FLAG,  FhlmcModel_BND_CORP.CUSIP_TYPE,  FhlmcModel_BND_CORP.CPN_TYPE,  FhlmcModel_BND_CORP.CUSIP,  "
+		 		+ "FhlmcModel_BND_CORP.FLAG_PERFORMING,  FhlmcModel_BND_CORP.DESC_INSTMT,  FhlmcModel_BND_CORP.SEC_TYPE,  FhlmcModel_BND_CORP.COUP_FREQ, "
+		 		+ " private CUSIP2_set CUSIP2_set,  private NOTES_set NOTES_set,  private CUSIP_ALIAS_set CUSIP_ALIAS_set,  FhlmcModel_BND_CORP.ROUND_FLAG,  "
+		 		+ "FhlmcModel_BND_CORP.MARKET,  private RATING_set RATING_set,  FhlmcModel_BND_CORP.LAST_REGULAR_PMT,  FhlmcModel_BND_CORP.TICKER,  "
+		 		+ "FhlmcModel_BND_CORP.PRICE_AS_PCT,  FhlmcModel_BND_CORP.COUPON_FIX,  FhlmcModel_BND_CORP.FLAG_REG_RIGHTS,  FhlmcModel_BND_CORP.LIQUIDITY, "
+		 		+ " FhlmcModel_BND_CORP.DATE_CONV,  FhlmcModel_BND_CORP.MARKET_ISSUE,  FhlmcModel_BND_CORP.LEAD_MGR,  FhlmcModel_BND_CORP.ACCRUAL_DT,  "
+		 		+ "FhlmcModel_BND_CORP.CD_INSTMT_TYPE,  private UDF_set UDF_set,  FhlmcModel_BND_CORP.COUNTRY,  FhlmcModel_BND_CORP.ISSUE_PRICE, "
+		 		+ " FhlmcModel_BND_CORP.ANNOUNCE_DT,  FhlmcModel_BND_CORP.ROUND_PRECISION,  FhlmcModel_BND_CORP.SM_SEC_GROUP,  FhlmcModel_BND_CORP.CALC_TYPE, "
+		 		+ " FhlmcModel_BND_CORP.CURRENCY,  FhlmcModel_BND_CORP.MATURITY,  FhlmcModel_BND_CORP.FIRST_SETTLE_DT,  FhlmcModel_BND_CORP.FLAG_ERISA,"
+		 		+ "  private Byte AMT_ISU,  FhlmcModel_BND_CORP.LEH_INDUSTRY,  FhlmcModel_BND_CORP.MTN,  FhlmcModel_BND_CORP.SETTLE_LOCATION, "
+		 		+ " FhlmcModel_BND_CORP.FLAG_144A,  FhlmcModel_BND_CORP.PMT_ADJ_METH";
+		 
+		 DataFrame assets=dataS.toDF().cache();
+		 assets.registerTempTable("ASSETS");
+		// DataFrame flatRec=docDF.select( "FhlmcModel_BND_CORP.PMT_LOCATION","FhlmcModel_BND_CORP.ISSUE_YIELD" );
+	// DataFrame flatRec=dataS.toDF().select(org.apache.spark.sql.functions.explode(docDF.col("FhlmcModel_BND_CORP")).as("FhlmcModel_FLAT") );
+		
+		 Row[] rowsInXml=assets.select("@RECORDS").collect();
+		 System.out.println("The row count is :"+rowsInXml[0].getLong(0));
+		 
+		 assets.show();		
+	
+		 DataFrame fhlmcModel_EX=sqlContext.sql("SELECT explode(ASSET.FhlmcModel_BND_CORP) as FhlmcModel_EX from ASSETS");
+		 fhlmcModel_EX.show();
+		 
+		System.out.println("The count of rows in dataset formatted DF is :: "+fhlmcModel_EX.count());
+		
+		DataFrame exp_col=fhlmcModel_EX.select("FhlmcModel_EX.*");
+		exp_col.show();
 		 
 		//createDataset(docDF.t, Encoders.bean(ASSETS.class)) ;
         
@@ -100,7 +149,8 @@ public class DataProcessor {
    //  indvFlatRec.show();
     
     
-     //Dataset
+     //Save File
+		exp_col.write().format("parquet").mode("overwrite").save(outputPath+partitionFormat+"fileName");
 
 	}
 
