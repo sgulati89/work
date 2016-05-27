@@ -1,5 +1,6 @@
 package com.spark.data.ingester;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 import org.apache.log4j.Level;
@@ -13,10 +14,17 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 
+import com.spark.data.Assets.ASSET;
 import com.spark.data.Assets.ASSETS;
 import com.spark.data.util.Constants;
 
-public class DataProcessor {
+public class DataProcessor implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	transient static Logger rootLogger = LogManager.getLogger("myLogger");
 
 	public static void main(String[] args) throws Exception {
 		// Map variables
@@ -36,12 +44,12 @@ public class DataProcessor {
 		outputPath = outputPath + "/" + partitionFormat;
 		errorPath = errorPath + "/" + partitionFormat;
 
-		Logger rootLogger = LogManager.getRootLogger();
-		rootLogger.setLevel(Level.INFO);
+		//Logger rootLogger = LogManager.getRootLogger();
+		//rootLogger.setLevel(Level.INFO);
 		rootLogger.info("Input Path is: " + hdfsInputPath);
 		rootLogger.info("Output Path is: " + outputPath);
 		rootLogger.info("Error Path is: " + errorPath);
-		// System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
+	   System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
 		SQLContext sqlContext = new SQLContext(javaSparkContext);
@@ -90,16 +98,16 @@ public class DataProcessor {
 		// TODO fetching file name dynamically is not working
 		/*
 		 * String[] fileArr=docDF.inputFiles(); for(String fil:fileArr){
-		 * System.out.println("The file names are" +fil); }
+		 * rootLogger.info("The file names are" +fil); }
 		 */
 
 		// Schema structure format
 
-		System.out.println(docDF.schema().simpleString());
+		rootLogger.info(docDF.schema().simpleString());
 
-		Dataset<ASSETS> dataS = docDF.as(Encoders.bean(ASSETS.class));
+	//	Dataset<ASSET> dataS = docDF.as(Encoders.bean(ASSET.class));
 		// checking
-		dataS.show();
+	//	dataS.show();
 
 		// TODO to check how to fetch data using dataset
 		// dataS.select();
@@ -121,7 +129,7 @@ public class DataProcessor {
 				+ "  private Byte AMT_ISU,  FhlmcModel_BND_CORP.LEH_INDUSTRY,  FhlmcModel_BND_CORP.MTN,  FhlmcModel_BND_CORP.SETTLE_LOCATION, "
 				+ " FhlmcModel_BND_CORP.FLAG_144A,  FhlmcModel_BND_CORP.PMT_ADJ_METH";
 
-		DataFrame assets = dataS.toDF().cache();
+		DataFrame assets = docDF;
 		assets.registerTempTable("ASSETS");
 		// DataFrame flatRec=docDF.select(
 		// "FhlmcModel_BND_CORP.PMT_LOCATION","FhlmcModel_BND_CORP.ISSUE_YIELD"
@@ -131,8 +139,8 @@ public class DataProcessor {
 		// );
 
 		rowsInXml = assets.select("@RECORDS").collect();
-		System.out.println("The count of rows in parent DF is :: " + rowsInXml[0].getLong(0));
-		System.out.println("The row count is :" + rowsInXml[0].getLong(0));
+		rootLogger.info("The count of rows in parent DF is :: " + rowsInXml[0].getLong(0));
+		rootLogger.info("The row count is :" + rowsInXml[0].getLong(0));
 
 		assets.show();
 
@@ -142,14 +150,14 @@ public class DataProcessor {
 		DataFrame exp_col = fhlmcModel_EX.select("FhlmcModel_EX.*");
 		exp_col.show();
 		Long rowsProcess = exp_col.count();
-		System.out.println("The count of rows in dataset formatted DF is :: " + rowsProcess.longValue());
+		rootLogger.info("The count of rows in dataset formatted DF is :: " + rowsProcess.longValue());
 
 		if (rowsProcess.longValue() == rowsInXml[0].getLong(0)) {
 			// Save File
 			exp_col.write().format("parquet").mode("overwrite").save(outputPath);
 		} else {
 			exp_col.write().format("parquet").mode("overwrite").save(errorPath + "/" + "fileName");
-			System.out.println("Saved in Error folder as number of Rows did not match!!!");
+			rootLogger.info("Saved in Error folder as number of Rows did not match!!!");
 			throw new Exception("Number of Rows did not match!!!");
 		}
 
