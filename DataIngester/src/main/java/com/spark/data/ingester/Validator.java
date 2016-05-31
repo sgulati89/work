@@ -1,6 +1,6 @@
 package com.spark.data.ingester;
 
-import com.elsevier.spark_xml_utils.xpath.XPathException;
+/*import com.elsevier.spark_xml_utils.xpath.XPathException;
 import com.elsevier.spark_xml_utils.xpath.XPathProcessor;
 
 public class Validator {
@@ -10,3 +10,4 @@ public class Validator {
 
 	}
 }
+*/
