@@ -12,10 +12,9 @@
 #
 #####################################################################################
 
-USAGE="USAGE: <inputFilePath:string:required> <isLocalFile:boolean:required> <fileFormat:string:required > <fileDefination:string:required> <outputPath:string:required> <partitionFormat:string:optional> "
+USAGE="USAGE: <inputFilePath:string:required> <isLocalFile:boolean:required> <fileFormat:string:required > <fileDefination:string:required> <outputPath:string:required> <partitionFormat:string:optional> <errorPath:string:required> <schemaPath:string:required> <rowTag:string:required> "
 #contants
 HADOOP_BIN="/home/hadoop/hadoop/hadoop-2.6.4/bin"
-hdfsInputPath=
 SPARK_BIN="/home/hadoop/spark/spark-1.6.1-bin-hadoop2.6/bin"
 
 
@@ -27,12 +26,16 @@ fileDefination=${4:-""}
 outputPath=${5:-""}
 partitionFormat=${6:-""}
 errorPath=${7:-""}
+schemaPath=${8:-""}
+rowTag=${9:-""}
+
+hdfsInputPath=
 
 #redirect all 
 1>&2 
 
 # check argument count
-if [ $# -ge 4 && $# -le 7 ]
+if [ $# -ge 4 && $# -le 9 ]
 then
   echo $USAGE
   exit
@@ -59,12 +62,22 @@ fi
   
   
 $SPARK_BIN/spark-submit \
---class com.spark.SparkTest \
+--class com.spark.data.ingester.DataProcessor \
 --master local[*] \
-/home/hadoop/Spark-XML-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
-$hdfsInputPath \
+/home/hadoop/project/work/DataIngester/target/DataIngester-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
+$inputFilePath \
 $fileFormat \
 $fileDefination \
 $outputPath \
 $partitionFormat \
 $errorPath
+
+if [ "$?" = "0" ]
+	then
+	   echo "$(date) :: Spark Job completed successfully "  
+	   echo " ------------------: Spark Job Finished :----------------------"   
+       echo " ------------------: $(date) :----------------------"
+    else
+	  echo "$(date) :: !!!!!!!! Eorror occured !!!!! While executing Spark Job !!!!!!!!!!!!!! " 
+	exit 1
+fi
