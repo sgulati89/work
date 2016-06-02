@@ -56,7 +56,7 @@ public class DataProcessor implements Serializable{
 		rootLogger.info("Input Path is: " + hdfsInputPath);
 		rootLogger.info("Output Path is: " + outputPath);
 		rootLogger.info("Error Path is: " + errorPath);
-	   System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
+	  // System.setProperty("hadoop.home.dir","C:\\Users\\sumit.kumar\\Docker\\winutil\\");
 		SparkConf conf = new SparkConf().setAppName("DataProcessor").setMaster("local[*]");
 		JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
 		SQLContext sqlContext = new SQLContext(javaSparkContext);
@@ -119,8 +119,19 @@ public class DataProcessor implements Serializable{
 
 		assets.show();
 		rootLogger.info("The Schema structure in which data needs to be stored is "+schemaString.getValue());
-		DataFrame exSchemaDF = sqlContext.sql("select "+schemaString.getValue()+" from "+rowTag);
-		exSchemaDF.show();
+		DataFrame exSchemaDF;
+		try {
+			exSchemaDF = sqlContext.sql("select "+schemaString.getValue()+" from "+rowTag);
+			exSchemaDF.show();
+			exSchemaDF.write().format("parquet").mode("overwrite").save(outputPath);
+			rootLogger.info("---------- SUCESSFULLY PARSED AND SAVED TO HDFS --------------------");
+		} catch (Exception e) {
+			assets.write().format("parquet").mode("overwrite").save(errorPath + "/" + "fileName");
+        	rootLogger.info("Saved in Error folder as number of Rows did not match!!!");
+		    throw new Exception("The searched columns does not exist in the formatted schema of the Inpust Data !!!"
+		    		+ " \n TheSchema of the Input file is as ::: "+assets.schema().treeString());
+		}
+		
 
 		//DataFrame exp_col = fhlmcModel_EX.select("FhlmcModel_EX.*");
 		//exp_col.show();
@@ -129,11 +140,9 @@ public class DataProcessor implements Serializable{
 
 		//if (rowsProcess.longValue() == rowsInXml[0].getLong(0)) {
 			// Save File
-		exSchemaDF.write().format("parquet").mode("overwrite").save(outputPath);
+		
 		//} else {
-		//	exp_col.write().format("parquet").mode("overwrite").save(errorPath + "/" + "fileName");
-		//	rootLogger.info("Saved in Error folder as number of Rows did not match!!!");
-		//	throw new Exception("Number of Rows did not match!!!");
+		
 		//}
 
 		// createDataset(docDF.t, Encoders.bean(ASSETS.class)) ;

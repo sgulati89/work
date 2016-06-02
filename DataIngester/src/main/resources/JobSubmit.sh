@@ -16,7 +16,7 @@ USAGE="USAGE: <inputFilePath:string:required> <isLocalFile:boolean:required> <fi
 #contants
 HADOOP_BIN="/home/hadoop/hadoop/hadoop-2.6.4/bin"
 SPARK_BIN="/home/hadoop/spark/spark-1.6.1-bin-hadoop2.6/bin"
-
+HDFS_HOME_FOLDER="/demo/hadoop/"
 
 #Variable assignment
 inputFilePath=${1:-""}
@@ -28,14 +28,13 @@ partitionFormat=${6:-""}
 errorPath=${7:-""}
 schemaPath=${8:-""}
 rowTag=${9:-""}
-
-hdfsInputPath=
+hdfsInputPath=${10:-""}
 
 #redirect all 
 1>&2 
 
 # check argument count
-if [ $# -ge 4 && $# -le 9 ]
+if [ $# -ge 4 && $# -le 10 ]
 then
   echo $USAGE
   exit
@@ -47,15 +46,17 @@ fi
 #Copy local file to HDFS
 
 if $isLocalFile
-  then
-    $HADOOP_BIN/hdfs dfs -put $inputFilePath $hdfsInputPath
-	if [ "$?" = "0" ]
-	then
-	  echo "$(date) :: Successfully copied file from local path :: $inputFilePath to hdfs path :: $hdfsInputPath"  
-    else
-	  echo "$(date) :: !!!!!!!! Eorror occured !!!!! Copying local file to HDFS failed " 
-	exit 1
-   fi
+    then
+		$HADOOP_BIN/hdfs dfs -put $inputFilePath $hdfsInputPath
+		if [ "$?" = "0" ]
+		then
+		  echo "$(date) :: Successfully copied file from local path :: $inputFilePath to hdfs path :: $hdfsInputPath"  
+		else
+		  echo "$(date) :: !!!!!!!! Eorror occured !!!!! Copying local file to HDFS failed " 
+		exit 1
+		fi
+   	else
+	$hdfsInputPath=$inputFilePath  
 fi  
   
 #Launch Job
@@ -65,7 +66,7 @@ $SPARK_BIN/spark-submit \
 --class com.spark.data.ingester.DataProcessor \
 --master local[*] \
 /home/hadoop/project/work/DataIngester/target/DataIngester-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
-$inputFilePath \
+$hdfsInputPath \
 $fileFormat \
 $fileDefination \
 $outputPath \
