@@ -13,10 +13,10 @@ Prerequisites
 Deployment Steps
 ----------------
 
-1. Build WebServices
+Build WebServices
 
-. Checkout the code
-. cd $GIT_CLONE_DIR/HazelcastWebServices
-. update the "etl.cluster.nodes" property in src/main/resources/app-config.properties with list of hazelcast instances (you can create comma separated list of instances if there are more than one instance)
-. Build the code using command "mvn clean install"
-. Copy target/HazelcastWebServices.war in webapps dir of apache tomcat
+1. Checkout the code
+2. cd $GIT_CLONE_DIR/HazelcastWebServices
+3. update the "etl.cluster.nodes" property in src/main/resources/app-config.properties with list of hazelcast instances (you can create comma separated list of instances if there are more than one instance)
+4. Build the code using command "mvn clean install"
+5. Copy target/HazelcastWebServices.war in webapps dir of apache tomcat
